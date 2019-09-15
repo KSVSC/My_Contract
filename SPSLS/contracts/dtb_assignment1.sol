@@ -2,13 +2,13 @@ pragma solidity ^0.4.25;
 
 contract rpsls
 {
-    uint public fee;
+    uint fee;
     int[5][5] matrix;
-    uint public number_of_games;
+    uint number_of_games;
     uint public current_number_of_players;
     uint[2] reg_time;
     uint lastchanceat;
-    address public admin;
+    address admin;
     address [2] public players;
     uint public current_turn;
     uint public current_game;
@@ -25,7 +25,7 @@ contract rpsls
         admin=msg.sender;
         fee=5 ether;
         current_number_of_players=0;
-        number_of_games=6;
+        number_of_games=3;
         players[0]=0;
         players[1]=0;
         reg_time[0]=0;
@@ -89,7 +89,7 @@ contract rpsls
     {
         
         require(current_number_of_players==2,"Awaiting Other Player !");
-        require(players[0]!=0 && players[1]!=0);
+        require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
         
         if(current_game%2==1 && current_turn==0)
         {
@@ -107,15 +107,15 @@ contract rpsls
         }
         else if(current_game%2==0 && current_turn==0)
         {
-            require(msg.sender==players[0],"It is Player 1's Turn !!");
-            hash1=sha256(ch,key);
+            require(msg.sender==players[1],"It is Player 2's Turn !!");
+            hash2=sha256(ch,key);
             current_turn=1;
             lastchanceat=now;
         }
         else if(current_game%2==0 && current_turn==1)
         {
-            require(msg.sender==players[1],"It is Player 2's Turn !!");
-            hash2=sha256(ch,key);
+            require(msg.sender==players[0],"It is Player 1's Turn !!");
+            hash1=sha256(ch,key);
             current_turn=2;
             lastchanceat=now;
         }
@@ -124,6 +124,7 @@ contract rpsls
     function reveal(uint ch,string key) public
     {
         bytes32 testhash;
+        require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
         require(current_turn==2,"Please wait for others to complete their turn");
         if(msg.sender==players[0])
         {
@@ -138,7 +139,7 @@ contract rpsls
         if(msg.sender==players[1])
         {
             testhash=sha256(ch,key);
-            if(testhash!=hash1)
+            if(testhash!=hash2)
             {
                 players[0].transfer(this.balance);
                 reset_to_defaults();
