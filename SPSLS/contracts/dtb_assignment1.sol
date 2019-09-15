@@ -39,7 +39,7 @@ contract rpsls
         winner=3;
     }
     
-    function reset_to_defaults() public
+    function reset_to_defaults()
     {
         current_number_of_players=0;
         number_of_games=1;
@@ -79,7 +79,7 @@ contract rpsls
         require(current_number_of_players==1,"To invoke this function, there should be only 1 player registered.");
         require(msg.sender!=admin,"Admin Cannot use this function.");
         require(reg_time[0] + 30 seconds < now,"Please wait for some more time.");
-        players[0].transfer(this.balance);
+        players[0].transfer(fee);
         reg_time[0]=0;
         reg_time[1]=0;
         reset_to_defaults();
@@ -87,7 +87,7 @@ contract rpsls
     
     function play(uint ch,string key) public
     {
-        
+        require(current_turn==0 || current_turn==1,"Move stored, now both reveal your choices and select getWinner");
         require(current_number_of_players==2,"Awaiting Other Player !");
         require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
         
@@ -119,6 +119,7 @@ contract rpsls
             current_turn=2;
             lastchanceat=now;
         }
+
     }
     
     function reveal(uint ch,string key) public
@@ -148,8 +149,44 @@ contract rpsls
         }
     }
     
+    /*function inactivity_claim() public
+    {
+       require(current_number_of_players==2,"Room not full, please wait for other player");
+        
+        if(msg.sender==players[0])
+        {
+            if((current_game%2==1 && current_turn==1) || (current_game%2==0 && current_turn==0))
+            {
+                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                
+                players[0].transfer(2*fee);
+                reset_to_defaults();
+                reg_time[0]=0;
+                reg_time[1]=0;
+                
+                
+            }
+        }
+       else if(msg.sender==players[1])
+        {
+            if((current_game%2==0 && current_turn==1) || (current_game%2==1 && current_turn==0))
+            {
+                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                
+                players[1].transfer(2*fee);
+                reset_to_defaults();
+                reg_time[0]=0;
+                reg_time[1]=0;
+                
+            }
+        }
+        
+    }*/
+    
     function getWinner() public
     {
+        bool val=(msg.sender==players[0] || msg.sender==players[1]);
+        require(val==true,"Only registered players allowed");
         require(choice1!=10 && choice2!=10,"Someone is still yet to reveal their choices");
         winner=game_matrix[choice1][choice2];
         scoreboard[winner]++;
@@ -158,8 +195,9 @@ contract rpsls
         {
             if(scoreboard[1]==scoreboard[2])
             {
-                players[0].transfer(fee);
-                players[1].transfer(fee);
+                // players[0].transfer(fee);
+                // players[1].transfer(fee);
+                admin.transfer(2*fee);
             }
             else if(scoreboard[1]>scoreboard[2])
             {
