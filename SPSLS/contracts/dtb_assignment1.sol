@@ -25,7 +25,7 @@ contract rpsls
         admin=msg.sender;
         fee=5 ether;
         current_number_of_players=0;
-        number_of_games=3;
+        number_of_games=1;
         players[0]=0;
         players[1]=0;
         reg_time[0]=0;
@@ -42,7 +42,7 @@ contract rpsls
     function reset_to_defaults() public
     {
         current_number_of_players=0;
-        number_of_games=6;
+        number_of_games=1;
         players[0]=0;
         players[1]=0;
         reg_time[0]=0;
@@ -131,7 +131,7 @@ contract rpsls
             testhash=sha256(ch,key);
             if(testhash!=hash1)
             {
-                players[1].transfer(this.balance);
+                players[1].transfer(2*fee);
                 reset_to_defaults();
             }
             choice1=ch;
@@ -141,7 +141,7 @@ contract rpsls
             testhash=sha256(ch,key);
             if(testhash!=hash2)
             {
-                players[0].transfer(this.balance);
+                players[0].transfer(2*fee);
                 reset_to_defaults();
             }
             choice2=ch;
@@ -156,18 +156,18 @@ contract rpsls
         
         if(current_game==number_of_games)
         {
-            if(scoreboard[0]==scoreboard[1])
+            if(scoreboard[1]==scoreboard[2])
             {
-                players[0].transfer(this.balance/2);
-                players[1].transfer(this.balance/2);
+                players[0].transfer(fee);
+                players[1].transfer(fee);
             }
-            else if(scoreboard[0]>scoreboard[1])
+            else if(scoreboard[1]>scoreboard[2])
             {
-                players[0].transfer(this.balance);
+                players[0].transfer(2*fee);
             }
             else
             {
-                players[1].transfer(this.balance);
+                players[1].transfer(2*fee);
             }
             reg_time[0]=0;
             reg_time[1]=0;
