@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity >=0.5.2 <0.6.0;
 
 contract SPSLS
 {
@@ -8,8 +8,9 @@ contract SPSLS
     uint public current_number_of_players;
     uint[2] reg_time;
     uint lastchanceat;
-    address admin;
-    address [2] public players;
+    address payable admin;
+    address adr;
+    address payable [2] public players;
     uint public current_turn;
     uint public current_game;
     uint public choice1;
@@ -23,11 +24,11 @@ contract SPSLS
     constructor() public
     {
         admin=msg.sender;
-        fee=5 wei;
+        fee=5 ether;
         current_number_of_players=0;
         number_of_games=3;
-        players[0]=0;
-        players[1]=0;
+        players[0]=0x0000000000000000000000000000000000000000;
+        players[1]=0x0000000000000000000000000000000000000000;
         reg_time[0]=0;
         reg_time[1]=0;
         current_turn=0;
@@ -42,8 +43,8 @@ contract SPSLS
     function reset_to_defaults() public
     {
         number_of_games=1;
-        players[0]=0;
-        players[1]=0;
+        players[0]=0x0000000000000000000000000000000000000000;
+        players[1]=0x0000000000000000000000000000000000000000;
         reg_time[0]=0;
         reg_time[1]=0;
         current_turn=0;
@@ -57,7 +58,7 @@ contract SPSLS
     {
         require(msg.sender!=admin,"Admin Cannot Register");
         require(current_number_of_players<2,"Room Already Full!!");
-        require(msg.value==fee,"Send Exact Fee (Only Wei)");
+        require(msg.value==fee,"Send Exact Fee (Only Ether)");
         if(current_number_of_players==1)
             require(msg.sender!=players[0],"This address is already registered");
         
@@ -115,7 +116,7 @@ contract SPSLS
         }
     }
     
-    function play(uint ch,string key) public
+    function play(uint ch,string memory key) public
     {
         require(current_turn==0 || current_turn==1,"Moves stored, now both Reveal Choices and select getWinner");
         require(current_number_of_players==2,"Awaiting Other Player !");
@@ -152,7 +153,7 @@ contract SPSLS
 
     }
     
-    function reveal(uint ch,string key) public
+    function reveal(uint ch,string memory key) public
     {
         bytes32 testhash;
         require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
