@@ -2,6 +2,7 @@ pragma solidity >=0.5.2 <0.6.0;
 
 contract SPSLS
 {
+    mapping(address=> uint256) public balance;
     uint fee;
     int[5][5] matrix;
     uint number_of_games;
@@ -18,15 +19,17 @@ contract SPSLS
     bytes32 hash1;
     bytes32 hash2;
     uint winner;
+    uint win;
     uint[3] public scoreboard;
     uint[5][5] public game_matrix;
     
     constructor() public
     {
         admin=msg.sender;
+        balance[admin] = 1000;
         fee=5 ether;
         current_number_of_players=0;
-        number_of_games=3;
+        number_of_games=10;
         players[0]=0x0000000000000000000000000000000000000000;
         players[1]=0x0000000000000000000000000000000000000000;
         reg_time[0]=0;
@@ -161,7 +164,6 @@ contract SPSLS
         if(msg.sender==players[0])
         {
             testhash=sha256(abi.encodePacked(ch,key));
-            // testhash=sha256(ch,key);
             if(testhash!=hash1)
             {
                 players[1].transfer(2*fee);
@@ -181,21 +183,21 @@ contract SPSLS
         }
     }
     
-    function getWinner() public
+    function getWinner() public returns(uint w)
     {
         bool val=(msg.sender==players[0] || msg.sender==players[1]);
         require(val==true,"Only registered players allowed");
         require(choice1!=10 && choice2!=10,"Someone is still yet to reveal their choices");
         winner=game_matrix[choice1-1][choice2-1];
+        win = winner;
         scoreboard[winner]++;
         
         if(current_game==number_of_games)
         {
             if(scoreboard[1]==scoreboard[2])
             {
-                // players[0].transfer(fee);
-                // players[1].transfer(fee);
-                admin.transfer(2*fee);
+                players[0].transfer(fee);
+                players[1].transfer(fee);
             }
             else if(scoreboard[1]>scoreboard[2])
             {
@@ -215,6 +217,7 @@ contract SPSLS
         choice1=10;
         choice2=10;
         winner=3;
+        return win;
     }
     
 }
