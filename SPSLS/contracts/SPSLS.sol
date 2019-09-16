@@ -1,86 +1,223 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.4.25;
 
-contract SPSLS{
-    // mapping (int => mapping(int => int)) payoffMatrix;
-    uint8[5][5] payoffMatrix;
-    address player1;
-    address player2;
+contract SPSLS
+{
+    uint fee;
+    int[5][5] matrix;
+    uint number_of_games;
+    uint public current_number_of_players;
+    uint[2] reg_time;
+    uint lastchanceat;
+    address admin;
+    address [2] public players;
+    uint public current_turn;
+    uint public current_game;
+    uint public choice1;
+    uint public choice2;
+    bytes32 hash1;
+    bytes32 hash2;
+    uint winner;
+    uint[3] public scoreboard;
+    uint[5][5] public game_matrix;
     
-    uint256 public p1_choice;
-    uint256 public p2_choice;
-    
-    constructor() public {
-        player1 = 0;
-        player2 = 0;
-        p2_choice = 0;
-        p1_choice = 0;
+    constructor() public
+    {
+        admin=msg.sender;
+        fee=5 ether;
+        current_number_of_players=0;
+        number_of_games=3;
+        players[0]=0;
+        players[1]=0;
+        reg_time[0]=0;
+        reg_time[1]=0;
+        current_turn=0;
+        current_game=1;
+        game_matrix=[[0, 2, 1, 1, 2],[1, 0, 2, 2, 1],[2, 1, 0, 1, 2],[2, 1, 2, 0, 1],[1, 2, 1, 2, 0]];
+        scoreboard=[0,0,0];
+        choice1=10;
+        choice2=10;
+        winner=3;
     }
     
-    // winner deciding matrix
-    function paymatrix() public{
-        payoffMatrix = [[0, 2, 1, 1, 2],[1, 0, 2, 2, 1],[2, 1, 0, 1, 2],[2, 1, 2, 0, 1],[1, 2, 1, 2, 0]];        
+    function reset_to_defaults() public
+    {
+        number_of_games=1;
+        players[0]=0;
+        players[1]=0;
+        reg_time[0]=0;
+        reg_time[1]=0;
+        current_turn=0;
+        current_game=1;
+        choice1=10;
+        choice2=10;
+        winner=3;
     }
     
-    //player register
-    function register() public payable playerNotRegistered() PaidEnoughCash(5 wei) {
-        if (player1 == 0)
-            player1 == msg.sender;
-        else if (player2 == 0)
-            player2 == msg.sender;
-    }
-    
-    modifier playerNotRegistered(){
-        if(msg.sender == player1 || msg.sender == player2)
-            revert();
-        else
-            _;
-    }
-    
-    modifier PaidEnoughCash(uint amount){
-        if(msg.value < amount)
-            revert();
-        else
-            _;
-    }
-    
-    //game play
-    function game(uint choice) private returns (int win){
-        if (msg.sender == player1)
-            p1_choice = choice;
-        else if (msg.sender == player2)
-            p2_choice = choice;
-        if (p1_choice!= 0 && p2_choice!= 0){
-            int winner = payoffMatrix[p1_choice][p2_choice];
-            if(winner ==1)
-                player1.transfer(address(this).balance);
-            else if (winner == 2)
-                player2.transfer(address(this).balance);
-            else{
-                player1.transfer(address(this).balance/2);
-                player2.transfer(address(this).balance/2);
-            }
-            
-            //reset choices and addresses
-            p1_choice = 0;
-            p2_choice = 0;
-            player1 = 0;
-            player2 = 0;
-            
-            return winner;
-        }
+    function register_as_player() public payable
+    {
+        require(msg.sender!=admin,"Admin Cannot Register");
+        require(current_number_of_players<2,"Room Already Full!!");
+        require(msg.value==fee,"Send Exact Fee (Only Ethers)");
+        if(current_number_of_players==1)
+            require(msg.sender!=players[0],"This address is already registered");
         
-        else
-            return -1;
+        players[current_number_of_players]=msg.sender;
+        reg_time[current_number_of_players]=now;
+        current_number_of_players++;
+        if(current_number_of_players==2)
+        {
+            current_turn=0;
+            current_game=1;
+            lastchanceat=now;
+        }
     }
     
-    function getContractBalance() private constant returns(uint amount){
-        return address(this).balance;
+    function p2_not_present_refund() public
+    {
+        require(msg.sender==players[0],"Only player1 can invoke this.");
+        require(current_number_of_players==1,"Cannot invoke this function.");
+        require(msg.sender!=admin,"Admin Cannot use this function.");
+        require(reg_time[0] + 30 seconds < now,"Please wait for some more time.");
+        players[0].transfer(fee);
+        reg_time[0]=0;
+        reg_time[1]=0;
+        current_number_of_players=0;
+        reset_to_defaults();
     }
     
-    function checkIfPlayer1() private constant returns(bool x){
-        return msg.sender == player1;
+    function play(uint ch,string key) public
+    {
+        require(current_turn==0 || current_turn==1,"Moves stored, now both Reveal Choices and select getWinner");
+        require(current_number_of_players==2,"Awaiting Other Player !");
+        require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
+        
+        if(current_game%2==1 && current_turn==0)
+        {
+            require(msg.sender==players[0],"It is Player1's Turn !!");
+            hash1=sha256(abi.encodePacked(ch,key));
+            current_turn+=1;
+            lastchanceat=now;
+        }
+        else if(current_game%2==1 && current_turn==1)
+        {
+            require(msg.sender==players[1],"It is Player2's Turn !!");
+            hash2=sha256(abi.encodePacked(ch,key));
+            current_turn+=1;
+            lastchanceat=now;
+        }
+        else if(current_game%2==0 && current_turn==0)
+        {
+            require(msg.sender==players[1],"It is Player2's Turn !!");
+            hash2=sha256(abi.encodePacked(ch,key));
+            current_turn+=1;
+            lastchanceat=now;
+        }
+        else if(current_game%2==0 && current_turn==1)
+        {
+            require(msg.sender==players[0],"It is Player1's Turn !!");
+            hash1=sha256(abi.encodePacked(ch,key));
+            current_turn+=1;
+            lastchanceat=now;
+        }
+
     }
-    function checkIfPlayer2() private constant returns(bool x){
-        return msg.sender == player2;
+    
+    function reveal(uint ch,string key) public
+    {
+        bytes32 testhash;
+        require(msg.sender==players[0] || msg.sender==players[1],"You are not registered to play.");
+        require(current_turn==2,"Please wait for other player to commit");
+        if(msg.sender==players[0])
+        {
+            testhash=sha256(abi.encodePacked(ch,key));
+            // testhash=sha256(ch,key);
+            if(testhash!=hash1)
+            {
+                players[1].transfer(2*fee);
+                reset_to_defaults();
+            }
+            choice1=ch;
+        }
+        if(msg.sender==players[1])
+        {
+            testhash=sha256(abi.encodePacked(ch,key));
+            if(testhash!=hash2)
+            {
+                players[0].transfer(2*fee);
+                reset_to_defaults();
+            }
+            choice2=ch;
+        }
     }
+    
+    // function inactivity_claim() public
+    // {
+    //   require(current_number_of_players==2,"Room not full, please wait for other player");
+        
+    //     if(msg.sender==players[0])
+    //     {
+    //         if((current_game%2==1 && current_turn==0) || (current_game%2==0 && current_turn==1))
+    //         {
+    //             require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                
+    //             players[0].transfer(2*fee);
+    //             reset_to_defaults();
+    //             reg_time[0]=0;
+    //             reg_time[1]=0;
+                
+                
+    //         }
+    //     }
+    //   else if(msg.sender==players[1])
+    //     {
+    //         if((current_game%2==1 && current_turn==1) || (current_game%2==0 && current_turn==0))
+    //         {
+    //             require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                
+    //             players[1].transfer(2*fee);
+    //             reset_to_defaults();
+    //             reg_time[0]=0;
+    //             reg_time[1]=0;
+                
+    //         }
+    //     }
+        
+    // }
+    
+    function getWinner() public
+    {
+        bool val=(msg.sender==players[0] || msg.sender==players[1]);
+        require(val==true,"Only registered players allowed");
+        require(choice1!=10 && choice2!=10,"Someone is still yet to reveal their choices");
+        winner=game_matrix[choice1-1][choice2-1];
+        scoreboard[winner]++;
+        
+        if(current_game==number_of_games)
+        {
+            if(scoreboard[1]==scoreboard[2])
+            {
+                // players[0].transfer(fee);
+                // players[1].transfer(fee);
+                admin.transfer(2*fee);
+            }
+            else if(scoreboard[1]>scoreboard[2])
+            {
+                players[0].transfer(2*fee);
+            }
+            else
+            {
+                players[1].transfer(2*fee);
+            }
+            reg_time[0]=0;
+            reg_time[1]=0;
+            current_number_of_players=0;
+            reset_to_defaults();
+        }
+        current_game++;
+        current_turn=0;
+        choice1=10;
+        choice2=10;
+        winner=3;
+    }
+    
 }
