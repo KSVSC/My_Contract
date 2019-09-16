@@ -23,7 +23,7 @@ contract SPSLS
     constructor() public
     {
         admin=msg.sender;
-        fee=5 ether;
+        fee=5 wei;
         current_number_of_players=0;
         number_of_games=3;
         players[0]=0;
@@ -57,7 +57,7 @@ contract SPSLS
     {
         require(msg.sender!=admin,"Admin Cannot Register");
         require(current_number_of_players<2,"Room Already Full!!");
-        require(msg.value==fee,"Send Exact Fee (Only Ethers)");
+        require(msg.value==fee,"Send Exact Fee (Only Wei)");
         if(current_number_of_players==1)
             require(msg.sender!=players[0],"This address is already registered");
         
@@ -83,6 +83,36 @@ contract SPSLS
         reg_time[1]=0;
         current_number_of_players=0;
         reset_to_defaults();
+    }
+    
+    function inactivity_claim() public
+    {
+        require(current_number_of_players==2, "Room not full, Please wait");
+        
+        if(msg.sender==players[0])
+        {
+            if((current_game%2==1 && current_turn==0) || (current_game%2==0 && current_turn==1))
+            {
+                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                players[0].transfer(2*fee);
+                reset_to_defaults();
+                reg_time[0]=0;
+                reg_time[1]=0;
+            current_number_of_players=0;
+            }
+        }
+        else if(msg.sender==players[1])
+        {
+            if((current_game%2==1 && current_turn==1) || (current_game%2==0 && current_turn==0))
+            {
+                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
+                players[1].transfer(2*fee);
+                reset_to_defaults();
+                reg_time[0]=0;
+                reg_time[1]=0;
+            current_number_of_players=0;
+            }
+        }
     }
     
     function play(uint ch,string key) public
@@ -149,40 +179,6 @@ contract SPSLS
             choice2=ch;
         }
     }
-    
-    // function inactivity_claim() public
-    // {
-    //   require(current_number_of_players==2,"Room not full, please wait for other player");
-        
-    //     if(msg.sender==players[0])
-    //     {
-    //         if((current_game%2==1 && current_turn==0) || (current_game%2==0 && current_turn==1))
-    //         {
-    //             require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
-                
-    //             players[0].transfer(2*fee);
-    //             reset_to_defaults();
-    //             reg_time[0]=0;
-    //             reg_time[1]=0;
-                
-                
-    //         }
-    //     }
-    //   else if(msg.sender==players[1])
-    //     {
-    //         if((current_game%2==1 && current_turn==1) || (current_game%2==0 && current_turn==0))
-    //         {
-    //             require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
-                
-    //             players[1].transfer(2*fee);
-    //             reset_to_defaults();
-    //             reg_time[0]=0;
-    //             reg_time[1]=0;
-                
-    //         }
-    //     }
-        
-    // }
     
     function getWinner() public
     {
