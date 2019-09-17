@@ -19,7 +19,7 @@ contract SPSLS
     bytes32 hash1;
     bytes32 hash2;
     uint winner;
-    uint win;
+    uint public win;
     uint[3] public scoreboard;
     uint[5][5] public game_matrix;
     
@@ -45,7 +45,7 @@ contract SPSLS
     
     function reset_to_defaults() public
     {
-        number_of_games=1;
+        number_of_games=10;
         players[0]=0x0000000000000000000000000000000000000000;
         players[1]=0x0000000000000000000000000000000000000000;
         reg_time[0]=0;
@@ -78,10 +78,10 @@ contract SPSLS
     
     function p2_not_present_refund() public
     {
+        require(msg.sender!=admin,"Admin Cannot use this function.");
         require(msg.sender==players[0],"Only player1 can invoke this.");
         require(current_number_of_players==1,"Cannot invoke this function.");
-        require(msg.sender!=admin,"Admin Cannot use this function.");
-        require(reg_time[0] + 30 seconds < now,"Please wait for some more time.");
+        require(reg_time[0] + 10 seconds < now,"Please wait for some more time.");
         players[0].transfer(fee);
         reg_time[0]=0;
         reg_time[1]=0;
@@ -93,24 +93,24 @@ contract SPSLS
     {
         require(current_number_of_players==2, "Room not full, Please wait");
         
-        if(msg.sender==players[0])
+        if(msg.sender==players[1])
         {
             if((current_game%2==1 && current_turn==0) || (current_game%2==0 && current_turn==1))
             {
-                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
-                players[0].transfer(2*fee);
+                require(lastchanceat+10 seconds < now,"Too Early to Claim, please wait");
+                players[1].transfer(2*fee);
                 reset_to_defaults();
                 reg_time[0]=0;
                 reg_time[1]=0;
             current_number_of_players=0;
             }
         }
-        else if(msg.sender==players[1])
+        else if(msg.sender==players[0])
         {
             if((current_game%2==1 && current_turn==1) || (current_game%2==0 && current_turn==0))
             {
-                require(lastchanceat+30 seconds < now,"Too Early to Claim, please wait");
-                players[1].transfer(2*fee);
+                require(lastchanceat+10 seconds < now,"Too Early to Claim, please wait");
+                players[0].transfer(2*fee);
                 reset_to_defaults();
                 reg_time[0]=0;
                 reg_time[1]=0;
@@ -183,7 +183,7 @@ contract SPSLS
         }
     }
     
-    function getWinner() public returns(uint w)
+    function getWinner() public
     {
         bool val=(msg.sender==players[0] || msg.sender==players[1]);
         require(val==true,"Only registered players allowed");
@@ -217,7 +217,6 @@ contract SPSLS
         choice1=10;
         choice2=10;
         winner=3;
-        return win;
     }
     
 }
