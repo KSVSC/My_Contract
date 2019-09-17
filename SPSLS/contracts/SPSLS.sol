@@ -183,7 +183,7 @@ contract SPSLS
         }
     }
     
-    function getWinner() public
+    function getWinner() public returns(uint256 w)
     {
         bool val=(msg.sender==players[0] || msg.sender==players[1]);
         require(val==true,"Only registered players allowed");
@@ -217,6 +217,8 @@ contract SPSLS
         choice1=10;
         choice2=10;
         winner=3;
+        
+        return win;
     }
     
 }

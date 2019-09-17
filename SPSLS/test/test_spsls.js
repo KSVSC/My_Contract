@@ -9,6 +9,7 @@ contract('SPSLS', function (accounts) {
         }
     }
 
+    ////////////////////Admin Deploys the Game//////////////////////////
     it("Should deploy the contract in admin's account", function(){
         return SPSLS.deployed().then(function(instance){
             return instance.balance.call(accounts[0]);
@@ -17,6 +18,7 @@ contract('SPSLS', function (accounts) {
         });
     });
 
+    ////////////////////Register into the Game//////////////////////////
     it("Admin shouldn't be allowed to register", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -63,7 +65,8 @@ contract('SPSLS', function (accounts) {
             });
     })
 
-    it("Player1 can't reveal choice before Player2 registers", () => {
+    ////////////////////play function//////////////////////////
+    it("Player1 can't play before Player2 registers", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
                 try {
@@ -75,6 +78,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
+    ////////////////////p2_not_present_refund function//////////////////////////
     it("Admin can't invoke p2_not_present_refund function", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -87,7 +91,7 @@ contract('SPSLS', function (accounts) {
             });
     });
 
-    it("Player1 can't invoke p2_not_present_refund function before 10 sec", () => {
+    it("Player1 can't invoke p2_not_present_refund function before 10 sec of wait", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
                 try {
@@ -110,6 +114,7 @@ contract('SPSLS', function (accounts) {
             });
     });
 
+    ////////////////////Register into the Game//////////////////////////
     it("Player2 should be able to register", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -133,6 +138,7 @@ contract('SPSLS', function (accounts) {
             });
     });
 
+    ////////////////////p2_not_present_refund function//////////////////////////
     it("Player2 can't invoke p2_not_present_refund function", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -154,7 +160,8 @@ contract('SPSLS', function (accounts) {
             });
     })
 
-    it("Player1 is first player 'odd' games ", () => {
+    ////////////////////play function//////////////////////////
+    it("Player1 is first player in 'odd' games ", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
                 try {
@@ -200,6 +207,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
+    ////////////////////Reveal function//////////////////////////
     it("Verify choices after reveal ", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -223,6 +231,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
+    ////////////////////getWinner function//////////////////////////
     it("Getwinner cannot reveal the winnner before players reveal their choices", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
@@ -235,7 +244,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
-    it("Getwinner cannot by unregistered players", () => {
+    it("Getwinner cannot be invoked by unregistered players", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
                 try {
@@ -267,7 +276,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
-    it("Player2 is first player 'even' games ", () => {
+    it("Player2 is first player in 'even' games ", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
                 try {
@@ -289,6 +298,7 @@ contract('SPSLS', function (accounts) {
             });
     })
 
+    ////////////////////inactivity_claim function//////////////////////////
     it("Player can't invoke inactivity_claim before 10 sec ", () => {
         return SPSLS.deployed()
             .then(async function (instance) {
