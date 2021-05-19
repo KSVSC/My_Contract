@@ -1,2 +1,2 @@
-# My_Contract
-Solidity contract for "Stone Paper Scissors Lizard Spock"
+# SmartContract
+This is smart contract written in Solidity for the well-known game "Stone Paper Scissors Lizard Spock"
